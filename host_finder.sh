@@ -6,28 +6,37 @@
 #		it will collect IP address of hosts which are UP now.
 
 is_host_up () {
-        ping -c 1 $1 > /dev/null
-        [ $? -eq 0 ] && echo $1 : Host is up 
+        if ping -c 1 $1 &> /dev/null:
+	then
+        	echo $1 : Host is up 
+	fi
 }
 
-if [ $# -eq 1 ]
+if [ $# -eq 1 -a ifconfig $1 &>/dev/null ]
 then
-MyIpAdd=$(ifconfig $1 | tail -n 8 | head -n 1 | cut -d " " -f 10)
+MyIpAdd=$(ifconfig $1 | grep inet | grep -v pre | cut -d " " -f 10 )
         #echo $MyIpAdd
-        MyNetwork=$(ifconfig $1 | tail -n 8 | head -n 1 | cut -d " " -f 10 | cut -d "." -f 1-3)
+MyNetwork=$(echo $MyIpAdd | cut -d "." -f 1-3)
+
 for i in $MyNetwork.{1..254}
 do
    if [ $i != $MyIpAdd ]
    then
    is_host_up $i & disown
+   continue
    else
        echo "$i : Your IP address"
    fi
 done
-	exit 0
+
+
+ 
 else
-	echo "Invalid Argument"
-	echo "USAGE : $0 <NetworkInterface i,e wlan0,eth0,wlp2s0,enp1s0 >"
+	echo -e "\e[31m Invalid Argument - Couldn't find the Interface $1\e[0m"
+	echo 
+	echo -e "\e[32m USAGE : $0 <NetworkInterface i,e wlan0,eth0,wlp2s0,enp1s0 >\e[0m"
 	exit 111
 	echo Terminated With error code $?
 fi
+
+exit 0 
