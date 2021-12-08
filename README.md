@@ -13,4 +13,6 @@ Scripts written based on my knowledge use it on your own risk.
     
     
 ## note :
-- All Scripts are written and tested on Ubuntu
+- All Scripts are written and tested on Ubuntu 20.04 LTS and Kali Rolling 2021.3  
+- Reviews are always welcome  
+
