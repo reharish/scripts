@@ -5,38 +5,41 @@
 # Description : This script will run through your network ip addresses,so that,
 #		it will collect IP address of hosts which are UP now.
 
-is_host_up () {
-        if ping -c 1 $1 &> /dev/null:
-	then
-        	echo $1 : Host is up 
-	fi
+is_host_up ()
+{
+
+    if ping -c 1 $1 &> /dev/null;
+    then
+        printf "$1\n"; 
+    fi
 }
 
-if [ $# -eq 1 -a ifconfig $1 &>/dev/null ]
+#echo $1
+
+if ip address show $1 &>/dev/null;
 then
-MyIpAdd=$(ifconfig $1 | grep inet | grep -v pre | cut -d " " -f 10 )
-        #echo $MyIpAdd
-MyNetwork=$(echo $MyIpAdd | cut -d "." -f 1-3)
+    
+    MyIPAddress=$(ip a show $1 | grep inet | grep -v inet6 | cut -d "/" -f 1 | tr -d " [a-zA-Z]")
 
-for i in $MyNetwork.{1..254}
-do
-   if [ $i != $MyIpAdd ]
-   then
-   is_host_up $i & disown
-   continue
-   else
-       echo "$i : Your IP address"
-   fi
-done
+    MyNetwork=$( echo $MyIPAddress | cut -d "." -f 1-3 )
 
-
- 
+    
+    for i in $MyNetwork.{1..254}
+    do
+	if [ $i != $MyIPAddress ]
+	then
+	    is_host_up $i & disown
+	else
+	    printf "$i" # Optional.
+	fi
+    done
+    
 else
-	echo -e "\e[31m Invalid Argument - Couldn't find the Interface $1\e[0m"
-	echo 
-	echo -e "\e[32m USAGE : $0 <NetworkInterface i,e wlan0,eth0,wlp2s0,enp1s0 >\e[0m"
-	exit 111
-	echo Terminated With error code $?
+    echo -e "\e[31m Invalid Argument - Couldn't find the Interface $1\e[0m"
+    echo 
+    echo -e "\e[32m USAGE : $0 <NetworkInterface i,e wlan0,eth0,wlp2s0,enp1s0 >\e[0m"
+    exit 111
+    echo Terminated With error code $?
 fi
 
 exit 0 
