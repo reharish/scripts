@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """
-Script : Net-Host
+Script : Host Finder
 Description : Finding available host belong to your local network like net-discover
 """
 
-import sys
+import os,sys
 import subprocess
 import threading
 
@@ -37,9 +37,7 @@ def send_ping_to_host(ipaddr) -> bool:
     output = subprocess.call(['ping', '-c', "1", ipaddr]
                              ,stdout=subprocess.PIPE)
     if not output:
-        print("{} : alive".format(ipaddr))
-    else:
-        print("{} : 404".format(ipaddr))
+        print("{}".format(ipaddr))
         
 def ping_sweep(hosts, thread):
     hosts.remove(hosts[0])
