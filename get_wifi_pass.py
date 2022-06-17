@@ -5,43 +5,39 @@
 # Description : Script used to collect passwords from Linux system,
 #	        which gives wifi names and passwords as a result.
 
-
+import os, sys
 import subprocess
-import re
+# import re
+import configparser
 
-try:
-	# collecting info's
-	wifiname = subprocess.getoutput("(ls /etc/NetworkManager/system-connections )").split("\n")
-	wifinames = subprocess.getoutput("(ls /etc/NetworkManager/system-connections  | cut -d '.' -f 1)")
-	wifis = wifinames.split("\n")
-	max_len=len(max(wifis))+3
+if sys.platform != "linux":
+    print("unsupported platform : {}".format(sys.platform))
+    sys.exit(1)
+
+SYS_CONN = "/etc/NetworkManager/system-connections"
 	
-	# filler
-	print("+---------------+")
-	print("+ Network Found +")
-	print("+---------------+")
-	print()
-	print(" ","SSID".ljust(max_len)," PASSWORDS")
-	print()
-	
-	# grepping out passwords i,e psk keys
-	for i in range(len(wifis)):
-		connection_type = subprocess.getoutput("sudo cat '/etc/NetworkManager/system-connections/"+wifiname[i]+"' | grep type= | cut -d '=' -f 2")
-		if connection_type == 'wifi':
-			passwd = subprocess.getoutput("sudo cat '/etc/NetworkManager/system-connections/"+wifiname[i]+"' | grep psk= | cut -d '=' -f 2")
-			#print(passwd)
-			if re.search("Permission denied",passwd):
-				print("make sure you run as Root")
-				break
-			else:
-				if passwd == "":
-					
-					print("+",wifis[i].ljust(max_len),"=> NONE")
-				else:
-					print("+",wifis[i].ljust(max_len),"=>",passwd)
+if __name__ == "__main__":
+
+	try:
 		
-	# filler
-	print()
+		all_connections = os.listdir(SYS_CONN)
+		max_len = len(max(all_connections))-10
+		print("## {} : PASSWORD \n".format("SSID".ljust(max_len)))
+#		print(max_len)
+		for conf_file in all_connections:
+			config = configparser.ConfigParser()
+			with open(os.path.join(SYS_CONN, conf_file), 'rt') as fp:
+				config.read_file(fp)
 
-except :
-	print ("Something went Wrong !!")
+			if config["connection"]["type"] == "wifi":
+				ssid = config["wifi"]["ssid"]
+				if config.has_option("wifi-security", "psk"):
+					passwd = config["wifi-security"]["psk"]
+				else:
+					passwd = "OPEN"
+				print("+  {} : {}".format(ssid.ljust(max_len), passwd))
+	
+	except Exception as e:
+		print("ERR : {}".format(e))
+		
+sys.exit(0)
